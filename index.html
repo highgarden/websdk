@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>CashFriends SDK 테스트 페이지</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="module">
+        // SDK 모듈 임포트
+        import AdSDK from './src/index.js';
+        import { EventTypes, ErrorTypes } from './src/core/utils.js';
+
+        // AdSDK에 이벤트 타입 할당
+        AdSDK.Events = EventTypes;
+        AdSDK.ErrorTypes = ErrorTypes;
+    </script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+            padding-bottom: 100px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: #5d2de3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        h1,
+        h2 {
+            margin: 0;
+        }
+
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #5d2de3;
+            padding-bottom: 5px;
+        }
+
+        .tab-container {
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+            background: #f0f0f0;
+        }
+
+        .tab.active {
+            background: #5d2de3;
+            color: white;
+            border-color: #5d2de3;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 0 5px 5px 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .ad-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 100px;
+            font-family: monospace;
+        }
+
+        button {
+            background: #5d2de3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #4923b5;
+        }
+
+        .button-secondary {
+            background: #6c757d;
+        }
+
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+
+        .button-success {
+            background: #28a745;
+        }
+
+        .button-success:hover {
+            background: #218838;
+        }
+
+        .button-danger {
+            background: #dc3545;
+        }
+
+        .button-danger:hover {
+            background: #c82333;
+        }
+
+        .json-viewer {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+
+        .log-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            background: #222;
+            color: #eee;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+
+        .log-time {
+            color: #999;
+            margin-right: 5px;
+        }
+
+        .log-info {
+            color: #5bc0de;
+        }
+
+        .log-warning {
+            color: #f0ad4e;
+        }
+
+        .log-error {
+            color: #d9534f;
+        }
+
+        .log-success {
+            color: #5cb85c;
+        }
+
+        /* Custom Templates Styles */
+
+        /* Video Template */
+        .native-video-card {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .video-wrapper {
+            position: relative;
+        }
+
+        .ad-video {
+            width: 100%;
+            display: block;
+        }
+
+        .video-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: none;
+            z-index: 0;
+            cursor: pointer;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
+            color: white;
+            z-index: 1;
+        }
+
+        .video-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .reward-tag {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        /* Feed Template */
+        .native-feed-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .feed-main-img {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+        }
+
+        .feed-body {
+            padding: 16px;
+        }
+
+        .feed-title {
+            font-size: 17px;
+            font-weight: bold;
+            margin: 0 0 8px;
+        }
+
+        .feed-desc {
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 8px;
+        }
+
+        .feed-subdesc {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .cta-button {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            background: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            background: #f8f8f8;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>CashFriends SDK 테스트 페이지</h1>
+        <p>다양한 광고 유형과 커스텀 템플릿을 테스트할 수 있습니다.</p>
+    </header>
+
+    <div class="container">
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" data-tab="standard-slots">기본 슬롯</div>
+                <div class="tab" data-tab="custom-template">커스텀 템플릿</div>
+                <div class="tab" data-tab="debug">디버깅</div>
+                <div class="tab" data-tab="config">환경 설정</div>
+            </div>
+
+            <!-- 기본 슬롯 -->
+            <div id="standard-slots" class="tab-content active">
+                <h2>기본 광고 슬롯</h2>
+                <div class="form-group">
+                    <label for="slot-id">슬롯 ID</label>
+                    <input type="text" id="slot-id" value="44b53d8b258219883d514171c7f10ca4" />
+                </div>
+                <div class="controls">
+                    <button id="load-ad">광고 로드</button>
+                    <button id="refresh-ad" class="button-secondary">새로고침</button>
+                    <button id="clear-ad" class="button-danger">초기화</button>
+                </div>
+                <div id="standard-ad-container" class="ad-container"></div>
+            </div>
+
+            <!-- 커스텀 템플릿 -->
+            <div id="custom-template" class="tab-content">
+                <h2>커스텀 템플릿 테스트</h2>
+                <div class="form-group">
+                    <label for="template-slot-id">슬롯 ID</label>
+                    <input type="text" id="template-slot-id" value="3817cc69dc126258dff0f9a46dd0ae9f" />
+                </div>
+                <div class="form-group">
+                    <label for="template-type">템플릿 유형</label>
+                    <select id="template-type">
+                        <option value="feed">네이티브 피드</option>
+                        <option value="video">네이티브 비디오</option>
+                        <option value="custom">직접 입력</option>
+                    </select>
+                </div>
+                <div class="form-group" id="custom-template-container">
+                    <label for="custom-template-html">커스텀 템플릿 HTML</label>
+                    <textarea id="custom-template-html"></textarea>
+                </div>
+                <div class="controls">
+                    <button id="apply-template">템플릿 적용</button>
+                    <button id="load-template-ad">광고 로드</button>
+                    <button id="clear-template-ad" class="button-danger">초기화</button>
+                </div>
+                <div id="custom-ad-container" class="ad-container"></div>
+            </div>
+
+            <!-- 디버깅 -->
+            <div id="debug" class="tab-content">
+                <h2>디버깅 도구</h2>
+                <div class="controls">
+                    <button id="toggle-debug" class="button-secondary">디버그 모드 토글</button>
+                    <button id="clear-logs" class="button-danger">로그 지우기</button>
+                </div>
+                <div class="form-group">
+                    <label for="event-log">이벤트 로그</label>
+                    <div id="event-log" class="log-container"></div>
+                </div>
+                <div class="form-group">
+                    <label for="creative-data">마지막으로 로드된 크리에이티브 데이터</label>
+                    <div id="creative-data" class="json-viewer">데이터가 없습니다.</div>
+                </div>
+            </div>
+
+            <!-- 환경 설정 -->
+            <div id="config" class="tab-content">
+                <h2>SDK 환경 설정</h2>
+                <div class="form-group">
+                    <label for="env-select">환경</label>
+                    <select id="env-select">
+                        <option value="dev">개발 (dev)</option>
+                        <option value="qa" selected>테스트 (qa)</option>
+                        <option value="prod">운영 (prod)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="service-type">서비스 타입</label>
+                    <select id="service-type">
+                        <option value="kakaoPageNextAndroid">카카오페이지 Android</option>
+                        <option value="kakaoPageNextIOS" selected>카카오페이지 iOS</option>
+                        <option value="kakaoWebtoonAndroid">카카오웹툰 Android</option>
+                        <option value="kakaoWebtoonIOS">카카오웹툰 iOS</option>
+                        <option value="melonAndroid">멜론 Android</option>
+                        <option value="melonIOS">멜론 iOS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="client-id">클라이언트 ID</label>
+                    <input type="text" id="client-id" value="ebbbb0f68df5c31f08ba0b893db4ccb1" />
+                </div>
+                <div class="form-group">
+                    <label for="user-id">사용자 ID</label>
+                    <input type="text" id="user-id" value="35222107" />
+                </div>
+                <div class="form-group">
+                    <label for="plain-ifa">Plain IFA</label>
+                    <input type="text" id="plain-ifa" value="718F5D8B3ED71D4D3AC2" />
+                </div>
+                <div class="form-group">
+                    <label for="device-id">디바이스 ID</label>
+                    <input type="text" id="device-id" value="D6E31DF83CD3C897A858" />
+                </div>
+                <div class="form-group">
+                    <label for="device-os">디바이스 OS</label>
+                    <select id="device-os">
+                        <option value="Android">Android</option>
+                        <option value="iOS" selected>iOS</option>
+                    </select>
+                </div>
+                <div class="controls">
+                    <button id="apply-config" class="button-success">설정 적용</button>
+                    <button id="reset-config" class="button-secondary">기본값으로 초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 템플릿 정의
+        const TEMPLATES = {
+            feed: `
+        <div class="native-feed-card">
+          <img class="feed-main-img" data-asset-optional="MAIN_IMAGE" />
+          <div class="feed-body">
+            <div class="feed-title" data-asset-optional="TITLE"></div>
+            <div class="feed-desc" data-asset-optional="DESCRIPTION"></div>
+            <div class="feed-subdesc" data-asset-optional="SUB_DESCRIPTION"></div>
+            <button class="cta-button">
+              <span data-asset-optional="CTA_TEXT">지금 확인하기</span>
+              <span style="margin: 0 4px;">+</span>
+              <span class="reward-tag" data-reward-optional>1,000 캐시</span>
+            </button>
+          </div>
+        </div>
+      `,
+            video: `
+        <div class="native-video-card">
+          <div class="video-wrapper">
+            <video class="ad-video" data-asset-optional="MAIN_VIDEO" autoplay muted playsinline></video>
+            <img class="video-thumbnail" data-asset-optional="MAIN_IMAGE" />
+            <div class="video-overlay">
+              <div class="video-title" data-asset-optional="TITLE"></div>
+              <div class="reward-tag" data-reward-optional>+1,000 캐시</div>
+            </div>
+          </div>
+        </div>
+      `,
+            custom: ``
+        };
+
+        // DOM 요소 가져오기
+        const elements = {
+            standardAdContainer: document.getElementById('standard-ad-container'),
+            customAdContainer: document.getElementById('custom-ad-container'),
+            slotIdInput: document.getElementById('slot-id'),
+            templateSlotIdInput: document.getElementById('template-slot-id'),
+            templateType: document.getElementById('template-type'),
+            customTemplateContainer: document.getElementById('custom-template-container'),
+            customTemplateHtml: document.getElementById('custom-template-html'),
+            eventLog: document.getElementById('event-log'),
+            creativeData: document.getElementById('creative-data'),
+            tabs: document.querySelectorAll('.tab'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            // 환경 설정 관련 요소
+            envSelect: document.getElementById('env-select'),
+            serviceType: document.getElementById('service-type'),
+            clientId: document.getElementById('client-id'),
+            userId: document.getElementById('user-id'),
+            plainIfa: document.getElementById('plain-ifa'),
+            deviceId: document.getElementById('device-id'),
+            deviceOs: document.getElementById('device-os')
+        };
+
+        // 전역 변수
+        let standardSlot = null;
+        let customSlot = null;
+        let isDebugMode = true;
+
+        // 탭 이벤트 처리
+        elements.tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 활성 탭 및 콘텐츠 클래스 제거
+                elements.tabs.forEach(t => t.classList.remove('active'));
+                elements.tabContents.forEach(c => c.classList.remove('active'));
+
+                // 클릭한 탭 활성화
+                tab.classList.add('active');
+
+                // 해당 콘텐츠 활성화
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // 템플릿 유형 변경 이벤트
+        elements.templateType.addEventListener('change', () => {
+            const selectedTemplate = elements.templateType.value;
+            if (selectedTemplate === 'custom') {
+                elements.customTemplateContainer.style.display = 'block';
+                elements.customTemplateHtml.value = '';
+            } else {
+                elements.customTemplateContainer.style.display = 'none';
+                elements.customTemplateHtml.value = TEMPLATES[selectedTemplate];
+            }
+        });
+
+        // 로그 추가 함수
+        function addLog(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+
+            const time = new Date().toLocaleTimeString();
+
+            logEntry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+            elements.eventLog.appendChild(logEntry);
+            elements.eventLog.scrollTop = elements.eventLog.scrollHeight;
+        }
+
+        // 크리에이티브 데이터 표시 함수
+        function displayCreativeData(creative) {
+            if (!creative) {
+                elements.creativeData.textContent = '데이터가 없습니다.';
+                return;
+            }
+
+            elements.creativeData.textContent = JSON.stringify(creative, null, 2);
+        }
+
+        // SDK 이벤트 리스너 설정
+        function setupEventListeners() {
+            AdSDK.on(AdSDK.Events.SDK_READY, (data) => {
+                addLog(`SDK 준비 완료: ${data.version}`, 'success');
+            });
+
+            AdSDK.on(AdSDK.Events.AD_LOADED, (data) => {
+                addLog(`광고 로드 완료: ${data.slotId} (${data.creatives.length}개)`, 'success');
+            });
+
+            AdSDK.on(AdSDK.Events.AD_RENDERED, (data) => {
+                addLog(`광고 렌더링 완료: ${data.slotId}`);
+
+                if (data.creatives && data.creatives.length > 0) {
+                    displayCreativeData(data.creatives[0]);
+                }
+            });
+
+            AdSDK.on(AdSDK.Events.AD_CLICKED, (data) => {
+                addLog(`광고 클릭: ${data.creative.id}`, 'info');
+            });
+
+            AdSDK.on(AdSDK.Events.AD_IMPRESSION, (data) => {
+                addLog(`광고 노출: ${data.creative.id}`, 'info');
+            });
+
+            AdSDK.on(AdSDK.Events.AD_VIDEO_STARTED, (data) => {
+                addLog(`비디오 시작: ${data.creative.id}`, 'info');
+            });
+
+            AdSDK.on(AdSDK.Events.AD_VIDEO_COMPLETED, (data) => {
+                addLog(`비디오 완료: ${data.creative.id}`, 'info');
+            });
+
+            AdSDK.on(AdSDK.Events.ERROR, (error) => {
+                addLog(`에러 발생: ${error.type} - ${error.message}`, 'error');
+            });
+        }
+
+        // SDK 초기화
+        function initializeSDK(config = {}) {
+            // 기본 설정
+            const defaultConfig = {
+                env: "qa",
+                debug: true,
+                serviceType: "kakaoPageNextIOS",
+                clientId: "ebbbb0f68df5c31f08ba0b893db4ccb1",
+                params: {
+                    userInfo_userId: "35222107",
+                    plainIfa: "718F5D8B3ED71D4D3AC2",
+                    deviceId: "D6E31DF83CD3C897A858",
+                    deviceOs: "iOS",
+                    os: "IOS",
+                    network: "WIFI"
+                }
+            };
+
+            // 사용자 설정과 기본 설정 병합
+            const mergedConfig = { ...defaultConfig, ...config };
+
+            // SDK 초기화
+            try {
+                AdSDK.init(mergedConfig);
+                addLog(`SDK 초기화 성공 (${mergedConfig.env})`, 'success');
+                isDebugMode = mergedConfig.debug;
+            } catch (error) {
+                addLog(`SDK 초기화 실패: ${error.message}`, 'error');
+            }
+
+            // 이벤트 리스너 설정
+            setupEventListeners();
+        }
+
+        // 기본 슬롯 로드
+        function loadStandardSlot() {
+            const slotId = elements.slotIdInput.value;
+
+            if (!slotId) {
+                addLog('슬롯 ID를 입력하세요.', 'warning');
+                return;
+            }
+
+            // 이전 슬롯이 있으면 정리
+            if (standardSlot) {
+                standardSlot.destroy();
+            }
+
+            // 슬롯 생성 및 로드
+            try {
+                addLog(`'${slotId}' 슬롯 로드 중...`);
+
+                standardSlot = AdSDK.createSlot({
+                    slotId: slotId,
+                    containerId: 'standard-ad-container',
+                    onLoading: (isLoading) => {
+                        if (isLoading) {
+                            addLog('광고 로딩 시작...');
+                        } else {
+                            addLog('광고 로딩 완료');
+                        }
+                    },
+                    onError: (error) => {
+                        addLog(`광고 로드 에러: ${error.message}`, 'error');
+                    }
+                });
+
+                standardSlot.load();
+            } catch (error) {
+                addLog(`슬롯 생성 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 커스텀 템플릿 슬롯 로드
+        function loadCustomTemplateSlot() {
+            const slotId = elements.templateSlotIdInput.value;
+
+            if (!slotId) {
+                addLog('슬롯 ID를 입력하세요.', 'warning');
+                return;
+            }
+
+            // 이전 슬롯이 있으면 정리
+            if (customSlot) {
+                customSlot.destroy();
+            }
+
+            // 커스텀 템플릿 적용
+            let templateHtml = '';
+            const templateType = elements.templateType.value;
+
+            if (templateType === 'custom') {
+                templateHtml = elements.customTemplateHtml.value;
+            } else {
+                templateHtml = TEMPLATES[templateType];
+            }
+
+            // 템플릿 적용
+            elements.customAdContainer.innerHTML = templateHtml;
+
+            // 슬롯 생성 및 로드
+            try {
+                addLog(`'${slotId}' 슬롯 로드 중... (커스텀 템플릿)`);
+
+                customSlot = AdSDK.createSlot({
+                    slotId: slotId,
+                    containerId: 'custom-ad-container',
+                    onLoading: (isLoading) => {
+                        if (isLoading) {
+                            addLog('광고 로딩 시작... (커스텀 템플릿)');
+                        } else {
+                            addLog('광고 로딩 완료 (커스텀 템플릿)');
+                        }
+                    },
+                    onError: (error) => {
+                        addLog(`광고 로드 에러: ${error.message}`, 'error');
+                    }
+                });
+
+                customSlot.load();
+            } catch (error) {
+                addLog(`슬롯 생성 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 환경 설정 적용
+        function applyConfig() {
+            const config = {
+                env: elements.envSelect.value,
+                debug: isDebugMode,
+                serviceType: elements.serviceType.value,
+                clientId: elements.clientId.value,
+                params: {
+                    userInfo_userId: elements.userId.value,
+                    plainIfa: elements.plainIfa.value,
+                    deviceId: elements.deviceId.value,
+                    deviceOs: elements.deviceOs.value,
+                    os: elements.deviceOs.value === 'iOS' ? 'IOS' : 'AOS',
+                    network: "WIFI"
+                }
+            };
+
+            // 설정 적용
+            initializeSDK(config);
+
+            // 기존 슬롯 정리
+            if (standardSlot) {
+                standardSlot.destroy();
+                standardSlot = null;
+            }
+
+            if (customSlot) {
+                customSlot.destroy();
+                customSlot = null;
+            }
+
+            addLog('설정이 적용되었습니다.', 'success');
+        }
+
+        // 이벤트 리스너 등록
+        document.addEventListener('DOMContentLoaded', () => {
+            // 초기화
+            initializeSDK();
+
+            // 템플릿 초기 설정
+            elements.customTemplateHtml.value = TEMPLATES.feed;
+
+            // 기본 슬롯 버튼
+            document.getElementById('load-ad').addEventListener('click', loadStandardSlot);
+
+            document.getElementById('refresh-ad').addEventListener('click', () => {
+                if (standardSlot) {
+                    addLog('광고 새로고침 중...');
+                    standardSlot.refresh();
+                } else {
+                    addLog('새로고침할 광고가 없습니다.', 'warning');
+                }
+            });
+
+            document.getElementById('clear-ad').addEventListener('click', () => {
+                if (standardSlot) {
+                    standardSlot.destroy();
+                    standardSlot = null;
+                    elements.standardAdContainer.innerHTML = '';
+                    addLog('광고가 제거되었습니다.');
+                }
+            });
+
+            // 커스텀 템플릿 버튼
+            document.getElementById('apply-template').addEventListener('click', () => {
+                const templateType = elements.templateType.value;
+                let templateHtml = '';
+
+                if (templateType === 'custom') {
+                    templateHtml = elements.customTemplateHtml.value;
+                } else {
+                    templateHtml = TEMPLATES[templateType];
+                }
+
+                elements.customAdContainer.innerHTML = templateHtml;
+                addLog(`'${templateType}' 템플릿이 적용되었습니다.`);
+            });
+
+            document.getElementById('load-template-ad').addEventListener('click', loadCustomTemplateSlot);
+
+            document.getElementById('clear-template-ad').addEventListener('click', () => {
+                if (customSlot) {
+                    customSlot.destroy();
+                    customSlot = null;
+                    elements.customAdContainer.innerHTML = '';
+                    addLog('커스텀 광고가 제거되었습니다.');
+                }
+            });
+
+            // 디버그 버튼
+            document.getElementById('toggle-debug').addEventListener('click', () => {
+                isDebugMode = !isDebugMode;
+                addLog(`디버그 모드 ${isDebugMode ? '활성화' : '비활성화'} 됨`, isDebugMode ? 'success' : 'warning');
+            });
+
+            document.getElementById('clear-logs').addEventListener('click', () => {
+                elements.eventLog.innerHTML = '';
+                addLog('로그가 지워졌습니다.');
+            });
+
+            // 환경 설정 버튼
+            document.getElementById('apply-config').addEventListener('click', applyConfig);
+
+            document.getElementById('reset-config').addEventListener('click', () => {
+                // 기본값으로 폼 초기화
+                elements.envSelect.value = 'qa';
+                elements.serviceType.value = 'kakaoPageNextIOS';
+                elements.clientId.value = 'ebbbb0f68df5c31f08ba0b893db4ccb1';
+                elements.userId.value = '35222107';
+                elements.plainIfa.value = '718F5D8B3ED71D4D3AC2';
+                elements.deviceId.value = 'D6E31DF83CD3C897A858';
+                elements.deviceOs.value = 'iOS';
+
+                // 설정 적용
+                applyConfig();
+                addLog('설정이 기본값으로 초기화되었습니다.', 'info');
+            });
+        });
+    </script>
+</body>
+
+</html>
